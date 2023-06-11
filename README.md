@@ -1,4 +1,4 @@
-# real_time_face_detection
+# real_time_face_detection without GPU
 The project was facial recognition. The approach we follow is:
 ## TRAINING:
 1. place all the folders in data/train/ directory as: <br />
