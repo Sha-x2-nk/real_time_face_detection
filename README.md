@@ -63,8 +63,8 @@ Somehow opencv has this bug where it cannot use onnx models with variable batch 
 The embedding generator is taken from facenet_pytorch repo by timesler. You can customise your own onnx model while OpenCV guys fix this bug and hardcode the batch_size.
 
 ## CITATIONS:
-https://github.com/timesler/facenet-pytorch
-https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB
-https://github.com/facebookresearch/faiss
-https://github.com/jtv/libpqxx
-https://github.com/strukturag/libheif
+https://github.com/timesler/facenet-pytorch<br />
+https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB<br />
+https://github.com/facebookresearch/faiss<br />
+https://github.com/jtv/libpqxx<br />
+https://github.com/strukturag/libheif<br />
