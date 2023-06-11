@@ -56,10 +56,10 @@ Platform -> Intel i5 1135g7
 | ------------- | ------------------- | -------------------- |
 |   >120 FPS    |       >110 FPS      |       >990 FPS       |
 
-All these results have been benched without GPU. Libraries like Intel MKL and Intel OpenVINO are strongly recommended. You can install them via the opencv guide I provided above.
-the live.cpp code can be modified to run inference over photos and videos as well if the user has an idea of what is going on in the code. 
-there is a keyword when cv::dnn::Net is initialised - Net.setpreferableBackend. We have set it to INFERENCE_ENGINE_BACKEND to use Intel OpenVINO. Should be set to CUDA if available.
-Somehow opencv has this bug where it cannot use onnx models with variable batch size, so we have 2 files, one which accepts batch_size=1 inputs and one which uses batch_size = 2 inputs.
+All these results have been benched without GPU. Libraries like Intel MKL and Intel OpenVINO are strongly recommended. You can install them via the opencv guide I provided above.<br />
+The live.cpp code can be modified to run inference over photos and videos as well if the user has an idea of what is going on in the code. <br />
+There is a keyword when cv::dnn::Net is initialised - Net.setpreferableBackend. We have set it to INFERENCE_ENGINE_BACKEND to use Intel OpenVINO. Should be set to CUDA if available.<br />
+Somehow opencv has this bug where it cannot use onnx models with variable batch size, so we have 2 files, one which accepts batch_size=1 inputs and one which uses batch_size = 2 inputs.<br />
 The embedding generator is taken from facenet_pytorch repo by timesler. You can customise your own onnx model while OpenCV guys fix this bug and hardcode the batch_size.
 
 ## CITATIONS:
