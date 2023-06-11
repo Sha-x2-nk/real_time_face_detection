@@ -2,7 +2,7 @@
 The project was facial recognition. The approach we follow is:
 ## TRAINING:
 1. place all the folders in data/train/ directory as:
-      data/
+      "data/
           train/
               shashank/
                   IMG_name_1.format
@@ -16,7 +16,7 @@ The project was facial recognition. The approach we follow is:
                     .
                     .
                 .
-                .
+                ."
 2. compile and run train.cpp. The file has support for all major formats. Since opencv does not have HIEC support(upto v4.7) libheif has to be compiled seperately, the library has been used in the .cpp file.
 3. Embeddings for each face are egenrated.
 4. the embeddings are appended in FAISS HNSW Index. FAISS is a very efficient similarity search librrary developed by google.
