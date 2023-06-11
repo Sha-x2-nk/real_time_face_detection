@@ -1,22 +1,22 @@
 # real_time_face_detection
 The project was facial recognition. The approach we follow is:
 ## TRAINING:
-1. place all the folders in data/train/ directory as:
-      "data/
-          train/
-              shashank/
-                  IMG_name_1.format
-                    .
-                    .
-                   IMG_name_n.fomrat
-               .
-               .
-               varun/
-                  IMG_name_1.format
-                    .
-                    .
-                .
-                ."
+1. place all the folders in data/train/ directory as: <br />
+&emsp;      data/<br />
+         &emsp;&emsp;train/<br />
+          &emsp;&emsp;&emsp;-shashank/<br />
+                &emsp;&emsp;&emsp;&emsp;  IMG_name_1.format<br />
+               &emsp;&emsp;&emsp;&emsp;&emsp;    .<br />
+                &emsp;&emsp;&emsp;&emsp;&emsp;    .<br />
+                &emsp;&emsp;&emsp;&emsp;   IMG_name_n.fomrat<br />
+               &emsp;&emsp;&emsp;&emsp;.<br />
+              &emsp;&emsp;&emsp;&emsp; .<br />
+               &emsp;&emsp;&emsp;varun/<br />
+                  &emsp;&emsp;&emsp;&emsp;IMG_name_1.format<br />
+                   &emsp;&emsp;&emsp;&emsp;&emsp; .<br />
+                 &emsp;&emsp;&emsp;&emsp;&emsp;   .<br />
+                &emsp;&emsp;&emsp;&emsp;.<br />
+              &emsp;&emsp;&emsp;&emsp;  .<br /></p>
 2. compile and run train.cpp. The file has support for all major formats. Since opencv does not have HIEC support(upto v4.7) libheif has to be compiled seperately, the library has been used in the .cpp file.
 3. Embeddings for each face are egenrated.
 4. the embeddings are appended in FAISS HNSW Index. FAISS is a very efficient similarity search librrary developed by google.
@@ -33,8 +33,8 @@ The project was facial recognition. The approach we follow is:
 8. If all the nearest neighbours are embeddings of the same person then a label is given and the person is labeled as identified. Our use case reuqires such high precision but it can be customised.
 
 ## compiling:
-if you have all the libraries installed and configured our way, the program can be compiled as
- "g+ live.cpp -o3 -o live -lfaiss -lpqxx -lpq `pkg-config --cflags --libs opencv4`"
+if you have all the libraries installed and configured our way, the program can be compiled as<br />
+ <code>g+ live.cpp -o3 -o live -lfaiss -lpqxx -lpq `pkg-config --cflags --libs opencv4`"</code><br />
  Please remember to source Intel OneAPI environmental varibales for your program to use them.
  
 
