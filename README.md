@@ -31,10 +31,11 @@ The project was facial recognition. The approach we follow is:
 6. the nearest neighbours' embedding ids are feteched from the db. 
 7. the similarity criteria we use right now is cosine similarity. threshold is kept at 0.75 and k=5 nearest neighbours are searched for.
 8. If all the nearest neighbours are embeddings of the same person then a label is given and the person is labeled as identified. Our use case reuqires such high precision but it can be customised.
+9. Also the asssigned label is held until a faceless frame is there, thereby saving computation. In future this is can also be scaled to multiple faces via object tracking.
 
 ## compiling:
 if you have all the libraries installed and configured our way, the program can be compiled as<br />
- <code>g+ live.cpp -o3 -o live -lfaiss -lpqxx -lpq `pkg-config --cflags --libs opencv4`"</code><br />
+ <code>g+ live.cpp -o3 -o live -lfaiss -lpqxx -lpq `pkg-config --cflags --libs opencv4 libheif`</code><br />
  Please remember to source Intel OneAPI environmental varibales for your program to use them.
  
 
