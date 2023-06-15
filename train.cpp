@@ -8,6 +8,8 @@
 #include<faiss/IndexHNSW.h>
 // FAISS for reading-writing to disk
 #include<faiss/index_io.h>
+// fstream for checking if files exist
+#include<fstream>
 // postgresql 
 #include<pqxx/pqxx>
 // file directory functions
@@ -320,12 +322,17 @@ int main(int argc, char *args[]){
 
     // loading the faiss index
     faiss::IndexHNSWFlat* index;
-    if(opendir(faiss_index_path.c_str())!=NULL){
+	std::ifstream file(faiss_index_path);
+    bool file_exists = file.good();
+    if(file.good()){
+		std::cout<<"LOADING SAVED INDEX\n";
         faiss::Index *loaded = faiss::read_index(faiss_index_path.c_str());
         index = dynamic_cast<faiss::IndexHNSWFlat*>(loaded);
     }
-    else
+    else{
         index = generate_index();
+		std::cout<<"CREATING NEW INDEX\n";
+	}
     // start the training process
     DIR* dir = opendir(train_dir.c_str());
     std::vector<std::string> users;
