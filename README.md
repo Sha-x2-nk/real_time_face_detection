@@ -44,6 +44,7 @@ if you have all the libraries installed and configured our way, the program can 
 2. the detector used for live video inference is UltraLightFaceDtector which is unmatched in its speed.
 3. embedding generator model used is FsceNet.
 4. The ulra light model 640rf supports 640x480 feed. If you plan to pass videos of varies sizes, please use 320RF_withoutpreprocessing model. If a lot of overlapping boxes are appearing, you can tune the nms threshold to remove them.
+![download](https://github.com/Sha-x2-nk/real_time_face_detection_without_GPU/assets/97790393/7fd8fe54-bbfb-420d-a0c9-e908e2b84eb4)
 
 ## Requirements
 1. OpenCV compiled from source.(We also used optimised libraries like intel MKL, TBB) you can follow the guide here https://medium.com/@shashankrajora2002/unlocking-powerful-performance-harnessing-cpu-capabilities-for-significant-improvements-without-4ad802fb7798
@@ -56,6 +57,7 @@ Platform -> Intel i5 1135g7
 | Detection     | embedding genration |  FAISS Index Search  |
 | ------------- | ------------------- | -------------------- |
 |   >120 FPS    |       >110 FPS      |       >990 FPS       |
+image
 
 All these results have been benched without GPU. Libraries like Intel MKL and Intel OpenVINO are strongly recommended. You can install them via the opencv guide I provided above.<br />
 The live.cpp code can be modified to run inference over photos and videos as well if the user has an idea of what is going on in the code. <br />
