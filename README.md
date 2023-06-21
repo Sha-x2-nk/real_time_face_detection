@@ -52,8 +52,8 @@ if you have all the libraries installed and configured our way, the program can 
 4. Libheif.(if you need support for HEIC format. otherwise you can comment decode_heic section in train.cpp)
 
 ## Results:
-Platform -> Intel i5 1135g7 
-image![bench](https://github.com/Sha-x2-nk/real_time_face_detection_without_GPU/assets/97790393/a9274452-2a9f-473d-b2bf-0226d08a2a3e)
+Platform -> Intel i5 1135g7 <br />
+![bench](https://github.com/Sha-x2-nk/real_time_face_detection_without_GPU/assets/97790393/a9274452-2a9f-473d-b2bf-0226d08a2a3e)
 
 
 All these results have been benched without GPU. Libraries like Intel MKL and Intel OpenVINO are strongly recommended. You can install them via the opencv guide I provided above.<br />
