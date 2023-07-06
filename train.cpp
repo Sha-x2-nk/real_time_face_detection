@@ -225,14 +225,6 @@ void YOLOv8_face::detect(cv::Mat& srcimg, std::vector<cv::Rect> &boxes, std::vec
 	}
 }
 
-faiss::IndexHNSWFlat* generate_index(int m = 128, int ef_search = 250, int ef_construction = 64){
-	faiss::IndexHNSWFlat* index = new faiss::IndexHNSWFlat(512, m, faiss::METRIC_INNER_PRODUCT);
-	index->hnsw.efSearch = ef_search;
-	index->hnsw.efConstruction = ef_construction;
-
-	return index;
-}
-
 inline bool is_heic(std::string img_path){
         return (img_path.substr(img_path.size()-5, 5) == ".heic" || img_path.substr(img_path.size()-5, 5) == ".HEIC");
 }
@@ -244,7 +236,6 @@ cv::Mat decode_heic(std::string filePath){
     // Retrieve the primary image (usually the first image in the HEIC file)
     heif_image_handle* imageHandle = nullptr;
     heif_context_get_primary_image_handle(context, &imageHandle);
-
     // Decode the HEIC image
     heif_image* image = nullptr;
     heif_decode_image(imageHandle, &image, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr);
@@ -269,36 +260,19 @@ cv::Mat decode_heic(std::string filePath){
     return mat;
 }
 
+faiss::IndexHNSWFlat *generateIndex(int m=128, int efconstruction=64, int efsearch=250){
+	faiss::IndexHNSWFlat* index = new faiss::IndexHNSWFlat(512, m);
+	index->hnsw.efConstruction = efconstruction;
+	index->hnsw.efSearch = efsearch;
+	return index;
+}
+
 int main(int argc, char *args[]){
     std::string train_dir = "./data/train";
-    std::string embed_gen_path = "./models/inceptionResnetV1.onnx";
+    std::string embed_gen1_path = "./models/inceptionResnetV1.onnx";
+    std::string embed_gen20_path = "./models/inceptionResnetV1_20.onnx";
     std::string detector_model_path = "./models/yolov8n-face.onnx";
     std::string faiss_index_path = "./models/faissHNSW.index";
-    if(argc>1){
-        char choice;
-        std::cout<<"--------CHANGING THE PATHS MENUALLY------\n";
-        std::cout<<"---CHANGE TRAINING DIRECTORY?[y/n] ";
-        std::cin>>choice;
-        if(choice == 'y' || choice == 'Y')
-        {
-            std::cout<<"\tEnter the new training directory: ";
-            std::cin>>train_dir;
-        }
-        std::cout<<"---CHANGE EMBEDDING GENERATOR MODEL PATH?[y/n] ";
-        std::cin>>choice;
-        if(choice == 'y' || choice == 'Y')
-        {
-            std::cout<<"\tEnter the new embedding generator model path: ";
-            std::cin>>embed_gen_path;
-        }
-        std::cout<<"---CHANGE DETECTOR MODEL PATH?[y/n] ";
-        std::cin>>choice;
-        if(choice == 'y' || choice == 'Y')
-        {
-            std::cout<<"\tEnter the new detector model path: ";
-            std::cin>>detector_model_path;
-        }
-    }
  
     // establishing connection with db
     pqxx::connection conn = pqxx::connection("dbname=IIIT_EEMS user=postgres password=282606 host = localhost, port = 5432");
@@ -315,14 +289,23 @@ int main(int argc, char *args[]){
     YOLOv8_face detector = YOLOv8_face(detector_model_path, 0.5, 0.96);
 
     // loading the embedding generator model
-    cv::dnn::Net embed_gen = cv::dnn::readNetFromONNX(embed_gen_path);
+    cv::dnn::Net embed_gen1 = cv::dnn::readNetFromONNX(embed_gen1_path);
     // setting the backend to openvino. SHOULD BE SWITCHED TO CUDA FOR BETTER PERFORMANCE
-    embed_gen.setPreferableBackend(cv::dnn::DNN_BACKEND_INFERENCE_ENGINE);
-    embed_gen.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+    embed_gen1.setPreferableBackend(cv::dnn::DNN_BACKEND_INFERENCE_ENGINE);
+    embed_gen1.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+
+    // loading the embedding generator model
+	cv::dnn::Net embed_gen20 = cv::dnn::readNetFromONNX(embed_gen20_path);
+    // setting the backend to openvino. SHOULD BE SWITCHED TO CUDA FOR BETTER PERFORMANCE
+	embed_gen1.setPreferableBackend(cv::dnn::DNN_BACKEND_INFERENCE_ENGINE);
+    embed_gen1.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 
     // loading the faiss index
     faiss::IndexHNSWFlat* index;
 	std::ifstream file(faiss_index_path);
+	
+	int batch_size = 20;
+
     bool file_exists = file.good();
     if(file.good()){
 		std::cout<<"LOADING SAVED INDEX\n";
@@ -330,7 +313,7 @@ int main(int argc, char *args[]){
         index = dynamic_cast<faiss::IndexHNSWFlat*>(loaded);
     }
     else{
-        index = generate_index();
+        index = generateIndex();
 		std::cout<<"CREATING NEW INDEX\n";
 	}
     // start the training process
@@ -347,9 +330,14 @@ int main(int argc, char *args[]){
             }
         }
     }
+
+	std::vector<cv::Mat> frame_faces; // for batching the frame inputs
+	std::vector<std::string> frame_labels;
+
     std::cout<<"FOUND "<<users.size()<<" USERS"<<std::endl;
     int total_embeddings = 0;
     // finding images in each user folder
+	double start = cv::getTickCount();
     for(auto &user:users){
         std::cout<<"CURRENTLY IN "<<user<<std::endl;
 		dir = opendir((train_dir+"/"+user).c_str());
@@ -369,14 +357,12 @@ int main(int argc, char *args[]){
             cv::Mat img;
             std::string img_path = train_dir+"/"+user+"/"+img_name;
             // reading image
-            if(is_heic(img_path)){
-                img = decode_heic(img_path);
-                // Convert from RGB to BGR if you want to visualise. for face it is not needed
-                // cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR);    
-            }
+            if(is_heic(img_path))
+                img = decode_heic(img_path);   
             else
-                img = cv::imread(img_path);	
-			// if(img.rows>1080 || img.cols>1080)
+                img = cv::imread(img_path);
+
+			// if(img.cols>1080 || img.rows > 1080)
 			// 	cv::resize(img, img, cv::Size(1080, 1080));
             // detecting face
             std::vector<cv::Rect> boxes;
@@ -389,33 +375,42 @@ int main(int argc, char *args[]){
                 continue;
             }
 			std::cout<<"\t\tFOUND "<<boxes.size()<<" FACE(s)"<<std::endl;
-
             cv::Mat face = img(boxes[0]);
             img.release();
-            cv::cvtColor(face,face,cv::COLOR_BGR2GRAY);
-            cv::cvtColor(face,face,cv::COLOR_GRAY2RGB);
             cv::resize(face, face, cv::Size(160, 160));
-            cv::imshow(",",face);
+			frame_faces.push_back(face);
+			frame_labels.push_back(user);
+            cv::imshow("TRAINING..",face);
             cv::waitKey(1);
-            cv::Mat blob = cv::dnn::blobFromImage(face, 1.0 / 128, cv::Size(160, 160), cv::Scalar(127.5, 127.5, 127.5), false, false);
-            embed_gen.setInput(blob);
-            cv::Mat embed = embed_gen.forward();
-            std::vector<float> embedding(embed.begin<float>(), embed.end<float>());
-            index->add(1, embedding.data());
-            txn->exec("INSERT INTO face_embeddings (id, name) VALUES ("+std::to_string(index->ntotal-1)+", '"+user+"')");
-            embedding.clear();
-			boxes.clear();
-			confidences.clear();
-			landmarks.clear();
-			indices.clear();
-			blob.release();
-			embed.release();
-			face.release();
-			total_embeddings += 1;
-
+			if(frame_faces.size() == batch_size){
+            	cv::Mat blob = cv::dnn::blobFromImages(frame_faces, 1.0 / 128, cv::Size(160, 160), cv::Scalar(127.5, 127.5, 127.5), true, false);
+            	embed_gen20.setInput(blob);
+				cv::Mat embed = embed_gen20.forward();
+				std::vector<float> embeddings(embed.begin<float>(), embed.end<float>());
+				index->add(batch_size, embeddings.data());
+				int id = index->ntotal-batch_size;
+				for(int i=0; i<batch_size; ++i){
+					txn->exec("INSERT INTO face_embeddings (id, name) VALUES ("+std::to_string(id)+", '"+frame_labels[i]+"')");
+					++id;
+				}
+				frame_faces.clear();
+				frame_labels.clear();
+				total_embeddings += batch_size;
+			}
         }
     }
-    std::cout<<"GENERATED "<<total_embeddings<<" EMBEDDINGS"<<std::endl;
+	for(int i=0;i<frame_faces.size(); ++i){
+		cv::Mat blob = cv::dnn::blobFromImage(frame_faces[i], 1.0 / 128, cv::Size(160, 160), cv::Scalar(127.5, 127.5, 127.5), true, false);
+		embed_gen1.setInput(blob);
+		cv::Mat embed = embed_gen1.forward();
+		std::vector<float> embedding(embed.begin<float>(), embed.end<float>());
+		index->add(1, embedding.data());
+		txn->exec("INSERT INTO face_embeddings (id, name) VALUES ("+std::to_string(index->ntotal-1)+", '"+frame_labels[i]+"')");
+		embedding.clear();
+		++total_embeddings;
+	}
+	double time_taken = (cv::getTickCount() - start)/cv::getTickFrequency();
+    std::cout<<"GENERATED "<<total_embeddings<<" EMBEDDINGS IN "<<time_taken<<" SECONDS."<<std::endl;
 
 	std::cout<<"COMMITING TO DB...\n";
 	txn->commit();
