@@ -35,7 +35,7 @@ The project was facial recognition. The approach we follow is:
 
 ## compiling:
 if you have all the libraries installed and configured our way, the program can be compiled as<br />
- <code>g+ live.cpp -o3 -o live -lfaiss -lpqxx -lpq `pkg-config --cflags --libs opencv4 libheif`</code><br />
+ <code>g++ live.cpp -o3 -o live -lfaiss -lpqxx -lpq `pkg-config --cflags --libs opencv4 libheif`</code><br />
  Please remember to source Intel OneAPI environmental varibales for your program to use them.
  
 
